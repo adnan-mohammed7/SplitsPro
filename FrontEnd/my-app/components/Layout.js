@@ -1,12 +1,19 @@
+import styles from '@/styles/Layout.module.css'
+import Link from 'next/link';
+
 export default function Layout(props) {
     return (
       <>
-        <h1>Pages / Routing in Next.js</h1>
-        <a href="/">Home</a> | <a href="/login">Login</a>
-        <hr />
+      <div className={styles.layoutBody}>
+        <h1 id={styles.heading}>SplitsPro</h1>
+        <div className={styles.links}>
+        <Link className={styles.hyperlinks}  href="/">Home</Link> | <Link className={styles.hyperlinks} href="/login">Login</Link>
+        </div>
+    </div>
         <br />
         {props.children}
         <br />
       </>
+      
     );
   }

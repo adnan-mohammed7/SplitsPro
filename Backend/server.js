@@ -50,7 +50,7 @@ app.get('/api/users/:userName', async (req, res) => {
         }
     } catch (err) {
         console.log(`Error Finding User: ${username}`)
-        res.status(500).send(`Error Finding User: ${username}`)
+        res.status(500).send(`Error: ${err}`)
     }
 })
 
@@ -67,7 +67,7 @@ app.get('/api/users/password/:userName', async (req, res) => {
         }
     } catch (err) {
         console.log(`Error Finding User: ${username}`)
-        res.status(500).send(`Error Finding User: ${username}`)
+        res.status(500).send(`Error: ${err}`)
     }
 })
 
@@ -92,11 +92,11 @@ app.post('/api/users', async (req, res) => {
             res.status(201).send(`New User: ${newUser} Added!`)
         }
     } catch (err) {
-        res.status(500).send(`Error adding new user!`)
+        res.status(500).send(`Error: ${err}`)
     }
 })
 
-app.put('/api/users',async (req, res) => {
+app.put('/api/users', async (req, res) => {
     const username = req.body.userName
     const newPassword = req.body.password
 
@@ -106,26 +106,39 @@ app.put('/api/users',async (req, res) => {
         if (result && result.password == newPassword) {
             res.status(500).send(`New password must be different from the current password`)
         }
-        else{
-            try{
+        else {
+            try {
                 const result = await Users.updateOne({ userName: new RegExp(`^${username}$`, 'i') }, { $set: { password: newPassword } })
-                if (result.modifiedCount > 0){
+                if (result.modifiedCount > 0) {
                     res.status(200).send(`User: ${username}'s password is updated!`)
-                }else{
+                } else {
                     res.status(404).send(`User: ${username} not found!`)
                 }
-            }catch(err){
-                res.status(500).send(`Error updating user: ${username}`)
+            } catch (err) {
+                res.status(500).send(`Error updating user: ${username}, Error: ${err}`)
             }
         }
     } catch (err) {
         console.log(`Error Finding User: ${username}`)
-        res.status(500).send(`Error Finding User: ${username}`)
+        res.status(500).send(`Error finding user: ${username}, Error: ${err}`)
     }
 })
 
-app.delete('/api/users', (req, res) => {
-    res.status(200).send()
+app.delete('/api/users', async (req, res) => {
+    const username = req.body.userName
+    console.log(username)
+
+    try {
+        const result = await Users.deleteOne({ userName: new RegExp(`^${username}$`, 'i') })
+        if (result.deletedCount > 0) {
+            res.status(200).send(`User: ${username} was deleted successfully!`)
+        }
+        else {
+            res.status(404).send(`User ${username} was not found!`)
+        }
+    } catch (err) {
+        res.status(500).send(`Error: ${err}`)
+    }
 })
 
 const onServerStart = () => {

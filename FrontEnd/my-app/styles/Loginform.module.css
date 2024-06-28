@@ -1,0 +1,17 @@
+.main{
+    border: solid black 1px;
+}
+
+.header{
+    text-align: center;
+}
+
+.btn{
+    margin: 10px 0px;
+}
+
+.btnBox{
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+}

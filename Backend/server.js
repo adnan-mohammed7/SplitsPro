@@ -10,6 +10,8 @@ app.use(express.static("public"))
 
 app.use(express.json());
 
+const bcrypt = require('bcryptjs');
+
 const mongoose = require('mongoose');
 const CONNECTION_STRING
     = "mongodb+srv://dbUser:Seneca123@cluster0.utiefr8.mongodb.net/splits?retryWrites=true&w=majority";
@@ -54,46 +56,36 @@ app.get('/api/users/:userName', async (req, res) => {
     }
 })
 
-app.get('/api/users/password/:userName', async (req, res) => {
-    username = req.params.userName
-    console.log("User Id: ", username)
-    try {
-        const result = await Users.findOne({ userName: new RegExp(`^${username}$`, 'i') })
-        console.log(result)
-        if (result) {
-            res.status(200).send(result.password)
-        } else {
-            res.status(404).send(`User Not Found!`)
-        }
-    } catch (err) {
-        console.log(`Error Finding User: ${username}`)
-        res.status(500).send(`Error: ${err}`)
-    }
-})
-
 app.post('/api/users', async (req, res) => {
     const newUsername = req.body.userName
-    const newPassword = req.body.password
+    const inputPassword = req.body.password
 
-    console.log(`username: ${newUsername}, password: ${newPassword}`)
+    bcrypt
+        .hash(inputPassword, 10)
+        .then(async (newPassword) => {
+            console.log(`username: ${newUsername}, password: ${newPassword}`)
 
-    try {
-        const result = await Users.findOne({ userName: new RegExp(`^${newUsername}$`, 'i') })
-        if (result) {
-            res.status(400).send(`User already exists!`)
-        } else {
-            const newUser = new Users({
-                userName: newUsername,
-                password: newPassword
-            });
-            console.log(newUser)
-            await newUser.save()
-            console.log(`New User: ${newUser} Added!`)
-            res.status(201).send(`New User: ${newUser} Added!`)
-        }
-    } catch (err) {
-        res.status(500).send(`Error: ${err}`)
-    }
+            try {
+                const result = await Users.findOne({ userName: new RegExp(`^${newUsername}$`, 'i') })
+                if (result) {
+                    res.status(400).send(`User already exists!`)
+                } else {
+                    const newUser = new Users({
+                        userName: newUsername,
+                        password: newPassword
+                    });
+                    console.log(newUser)
+                    await newUser.save()
+                    console.log(`New User: ${newUser} Added!`)
+                    res.status(201).send(`New User: ${newUser} Added!`)
+                }
+            } catch (err) {
+                res.status(500).send(`Error: ${err}`)
+            }
+        })
+        .catch((err) => {
+            res.status(500).send(err)
+        });
 })
 
 app.put('/api/users', async (req, res) => {
@@ -103,20 +95,27 @@ app.put('/api/users', async (req, res) => {
     try {
         const result = await Users.findOne({ userName: new RegExp(`^${username}$`, 'i') })
         console.log(result)
-        if (result && result.password == newPassword) {
-            res.status(500).send(`New password must be different from the current password`)
-        }
-        else {
-            try {
-                const result = await Users.updateOne({ userName: new RegExp(`^${username}$`, 'i') }, { $set: { password: newPassword } })
-                if (result.modifiedCount > 0) {
-                    res.status(200).send(`User: ${username}'s password is updated!`)
+        if (result) {
+            bcrypt.compare(newPassword, result.password).then(async (result) => {
+                if (result == true) {
+                    res.status(500).send(`New password must be different from the current password`)
                 } else {
-                    res.status(404).send(`User: ${username} not found!`)
+                    bcrypt.hash(newPassword, 10).then(async (hash) => {
+                        try {
+                            const result = await Users.updateOne({ userName: new RegExp(`^${username}$`, 'i') }, { $set: { password: hash } })
+                            if (result.modifiedCount > 0) {
+                                res.status(200).send(`User: ${username}'s password is updated!`)
+                            } else {
+                                res.status(404).send(`User: ${username} not found!`)
+                            }
+                        } catch (err) {
+                            res.status(500).send(`Error updating user: ${username}, Error: ${err}`)
+                        }
+                    }).catch((err) => {
+                        res.status(500).send(err)
+                    });            
                 }
-            } catch (err) {
-                res.status(500).send(`Error updating user: ${username}, Error: ${err}`)
-            }
+            });
         }
     } catch (err) {
         console.log(`Error Finding User: ${username}`)
@@ -146,3 +145,20 @@ const onServerStart = () => {
     console.log(`http://localhost:${HTTP_PORT}`);
 };
 app.listen(HTTP_PORT, onServerStart);
+
+/*app.get('/api/users/password/:userName', async (req, res) => {
+    username = req.params.userName
+    console.log("User Id: ", username)
+    try {
+        const result = await Users.findOne({ userName: new RegExp(`^${username}$`, 'i') })
+        console.log(result)
+        if (result) {
+            res.status(200).send(result.password)
+        } else {
+            res.status(404).send(`User Not Found!`)
+        }
+    } catch (err) {
+        console.log(`Error Finding User: ${username}`)
+        res.status(500).send(`Error: ${err}`)
+    }
+})*/

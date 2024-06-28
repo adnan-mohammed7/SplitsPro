@@ -13,5 +13,10 @@
 .btnBox{
     display: flex;
     flex-direction: row;
-    justify-content: end;
+    justify-content: flex-end;
+}
+
+.signUpText{
+    margin: 10px 0px 0px 0px;
+    text-align: center;
 }

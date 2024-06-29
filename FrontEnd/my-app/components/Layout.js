@@ -7,7 +7,7 @@ export default function Layout(props) {
       <div className={styles.layoutBody}>
         <h1 id={styles.heading}>SplitsPro</h1>
         <div className={styles.links}>
-        <Link className={styles.hyperlinks}  href="/">Home</Link> | <Link className={styles.hyperlinks} href="/login">Login</Link>
+        <Link className={styles.hyperlinks}  href="/">Homepage</Link> | <Link className={styles.hyperlinks} href="/home">Account</Link> | <Link className={styles.hyperlinks} href="/login">Login</Link> 
         </div>
     </div>
         <br />

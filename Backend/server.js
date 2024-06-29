@@ -56,12 +56,13 @@ app.get('/api/users/:userName', async (req, res) => {
     }
 })
 
-app.post('/api/users', async (req, res) => {
+app.post('/api/users/register', async (req, res) => {
     const newUsername = req.body.userName
     const inputPassword = req.body.password
+    const confirmPassword = req.body.confirmPassword
 
-    bcrypt
-        .hash(inputPassword, 10)
+    if(inputPassword == confirmPassword){
+        bcrypt.hash(inputPassword, 10)
         .then(async (newPassword) => {
             console.log(`username: ${newUsername}, password: ${newPassword}`)
 
@@ -86,9 +87,34 @@ app.post('/api/users', async (req, res) => {
         .catch((err) => {
             res.status(500).send(err)
         });
+    }else{
+        res.status(500).send(`Password does not match`)
+    }
 })
 
-app.put('/api/users', async (req, res) => {
+app.post('/api/users/login', async (req,res) =>{
+    const username = req.body.userName
+    const password = req.body.password
+
+    try{
+        const result = await Users.findOne({ userName: new RegExp(`^${username}$`, 'i') })
+        if(result){
+            bcrypt.compare(password, result.password).then((hash) =>{
+                if (hash == true){
+                    res.status(200).send(`Login successful`)
+                }else{
+                    res.status(500).send(`Incorrect password for User: ${username}`)
+                }
+            })
+        }else{
+            res.status(404).send(`User: ${username} not found!`)
+        }
+    }catch(err){
+        res.status(404).send(`Error: ${err}`)
+    }
+})
+
+app.put('/api/users/update', async (req, res) => {
     const username = req.body.userName
     const newPassword = req.body.password
 
@@ -123,7 +149,7 @@ app.put('/api/users', async (req, res) => {
     }
 })
 
-app.delete('/api/users', async (req, res) => {
+app.delete('/api/users/delete', async (req, res) => {
     const username = req.body.userName
     console.log(username)
 

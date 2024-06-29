@@ -1,6 +1,6 @@
 import Hello from '@/components/Hello';
 
-export default function Home() {
+export default function Index() {
   return (
     <Hello />    
   )

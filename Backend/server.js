@@ -61,7 +61,7 @@ app.get('/api/users',passport.authenticate('jwt', { session: false }), async (re
         const users = await Users.find({}, 'userName').lean().exec();
         res.status(200).send(users)
     } catch (err) {
-        res.status(500).send(err)
+        res.status(500).send({message: err})
     }
 })
 
@@ -74,11 +74,11 @@ app.get('/api/users/:userName', async (req, res) => {
         if (result) {
             res.status(200).send(result)
         } else {
-            res.status(404).send(`User Not Found!`)
+            res.status(404).send({message: `User Not Found!`})
         }
     } catch (err) {
-        console.log(`Error Finding User: ${username}`)
-        res.status(500).send(`Error: ${err}`)
+        console.log({message: `Error Finding User: ${username}`})
+        res.status(500).send({message: `Error: ${err}`})
     }
 })
 
@@ -95,7 +95,7 @@ app.post('/api/users/register', async (req, res) => {
                 try {
                     const result = await Users.findOne({ userName: new RegExp(`^${newUsername}$`, 'i') })
                     if (result) {
-                        res.status(400).send(`User already exists!`)
+                        res.status(400).send({message: `User already exists!`})
                     } else {
                         const newUser = new Users({
                             userName: newUsername,
@@ -104,17 +104,17 @@ app.post('/api/users/register', async (req, res) => {
                         console.log(newUser)
                         await newUser.save()
                         console.log(`New User: ${newUser} Added!`)
-                        res.status(201).send(`New User: ${newUser} Added!`)
+                        res.status(201).send({message: `New User: ${newUser} Added!`})
                     }
                 } catch (err) {
-                    res.status(500).send(`Error: ${err}`)
+                    res.status(500).send({message: `Error: ${err}`})
                 }
             })
             .catch((err) => {
-                res.status(500).send(err)
+                res.status(500).send({message: err})
             });
     } else {
-        res.status(500).send(`Password does not match`)
+        res.status(500).send({message: `Password does not match`})
     }
 })
 
@@ -137,14 +137,14 @@ app.post('/api/users/login', async (req, res) => {
                     let token = jwt.sign(payload, jwtOptions.secretOrKey);
                     res.status(200).send({message: `Login successful`, token: token})
                 } else {
-                    res.status(500).send(`Incorrect password for User: ${username}`)
+                    res.status(500).send({message: `Incorrect password for User: ${username}`})
                 }
             })
         } else {
-            res.status(404).send(`User: ${username} not found!`)
+            res.status(404).send({message: `User: ${username} not found!`})
         }
     } catch (err) {
-        res.status(404).send(`Error: ${err}`)
+        res.status(404).send({message: `Error: ${err}`})
     }
 })
 
@@ -158,28 +158,28 @@ app.put('/api/users/update', async (req, res) => {
         if (result) {
             bcrypt.compare(newPassword, result.password).then(async (result) => {
                 if (result == true) {
-                    res.status(500).send(`New password must be different from the current password`)
+                    res.status(500).send({message: `New password must be different from the current password`})
                 } else {
                     bcrypt.hash(newPassword, 10).then(async (hash) => {
                         try {
                             const result = await Users.updateOne({ userName: new RegExp(`^${username}$`, 'i') }, { $set: { password: hash } })
                             if (result.modifiedCount > 0) {
-                                res.status(200).send(`User: ${username}'s password is updated!`)
+                                res.status(200).send({message: `User: ${username}'s password is updated!`})
                             } else {
-                                res.status(404).send(`User: ${username} not found!`)
+                                res.status(404).send({message: `User: ${username} not found!`})
                             }
                         } catch (err) {
-                            res.status(500).send(`Error updating user: ${username}, Error: ${err}`)
+                            res.status(500).send({message: `Error updating user: ${username}, Error: ${err}`})
                         }
                     }).catch((err) => {
-                        res.status(500).send(err)
+                        res.status(500).send({message: err})
                     });
                 }
             });
         }
     } catch (err) {
         console.log(`Error Finding User: ${username}`)
-        res.status(500).send(`Error finding user: ${username}, Error: ${err}`)
+        res.status(500).send({message: `Error finding user: ${username}, Error: ${err}`})
     }
 })
 
@@ -190,13 +190,13 @@ app.delete('/api/users/delete', async (req, res) => {
     try {
         const result = await Users.deleteOne({ userName: new RegExp(`^${username}$`, 'i') })
         if (result.deletedCount > 0) {
-            res.status(200).send(`User: ${username} was deleted successfully!`)
+            res.status(200).send({message: `User: ${username} was deleted successfully!`})
         }
         else {
-            res.status(404).send(`User ${username} was not found!`)
+            res.status(404).send({message: `User ${username} was not found!`})
         }
     } catch (err) {
-        res.status(500).send(`Error: ${err}`)
+        res.status(500).send({message: `Error: ${err}`})
     }
 })
 

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useRouter } from 'next/router';
 import { Container, Form, Button } from 'react-bootstrap';
 import styles from '@/styles/Loginform.module.css'
 import Link from 'next/link';
@@ -10,7 +9,6 @@ export default function Signupform() {
     const [passwordCheck, setPasswordCheck] = useState('');
     const [error, setError] = useState('');
     const [result, setResult] = useState('');
-    const router = useRouter();
 
     const registerUser = async (name, passwordOne, passwordTwo) => {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
@@ -35,7 +33,7 @@ export default function Signupform() {
         registerUser(username, password, passwordCheck)
     };
 
-    const reset = () =>{
+    const reset = () => {
         setError('')
         setResult('')
     }
@@ -43,7 +41,7 @@ export default function Signupform() {
     return (<>
         <Container className={styles.main}>
             <h1 className={styles.header}>Signup</h1>
-            <Form onSubmit={handleSubmit} onClick={()=>reset()}>
+            <Form onSubmit={handleSubmit} onClick={() => reset()}>
                 <Form.Group controlId="username">
                     <Form.Label>Username:</Form.Label>
                     <Form.Control
@@ -78,15 +76,14 @@ export default function Signupform() {
                 </Form.Group>
 
                 <div className={styles.btnBox}>
+                    {error && <p className={`text-danger ${styles.warning}`}>{error}</p>}
+                    {result && <p className={`text-success ${styles.warning}`}>{result}</p>}
                     <Button className={styles.btn} variant="primary" type="submit">
                         Login
                     </Button>
                 </div>
             </Form>
-            {error && <p className="text-danger">{error}</p>}
-            {result && <p className='text-success'>{result}</p>}
         </Container>
-
         <h6 className={styles.signUpText}>Already have an Account? <Link href="/login">Login</Link></h6>
     </>
     );

@@ -16,7 +16,7 @@ export default function Layout(props) {
       <div className={styles.layoutBody}>
         <h1 id={styles.heading}>SplitsPro</h1>
         <div className={styles.links}>
-          <Link className={styles.hyperlinks} href="/">Homepage</Link><p> | </p>{!token&&<Link className={styles.hyperlinks} href="/login">Login</Link>}{!token && <p> | </p>}{!token && <Link className={styles.hyperlinks} href="/signup">Signup</Link>} {token && <Link className={styles.hyperlinks} href="/login" onClick={logout}>Logout</Link>}
+          {!token && <Link className={styles.hyperlinks} href="/">Homepage</Link>}{!token && <p> | </p>}{!token&&<Link className={styles.hyperlinks} href="/login">Login</Link>}{!token && <p> | </p>}{!token && <Link className={styles.hyperlinks} href="/signup">Signup</Link>} {token && <Link className={styles.hyperlinks} href="/login" onClick={logout}>Logout</Link>}
         </div>
       </div>
       <br />

@@ -48,14 +48,13 @@ export default function Loginform() {
                 </Form.Group>
 
                 <div className={styles.btnBox}>
+                {warning && (<><br /><Alert className={styles.warning} variant="danger">{warning}</Alert></>)}
                     <Button className={styles.btn} variant="primary" type="submit">
                         Login
                     </Button>
                 </div>
             </Form>
         </Container>
-
-        {warning && (<><br /><Alert variant="danger">{warning}</Alert></>)}
 
         <h6 className={styles.signUpText}>Don't have an account? <Link href="/signup">Signup</Link></h6>
     </>

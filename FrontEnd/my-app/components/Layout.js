@@ -15,8 +15,11 @@ export default function Layout(props) {
     <>
       <div className={styles.layoutBody}>
         <h1 id={styles.heading}>SplitsPro</h1>
-        <div className={styles.links}>
-          {!token && <Link className={styles.hyperlinks} href="/">Homepage</Link>}{!token && <p> | </p>}{!token&&<Link className={styles.hyperlinks} href="/login">Login</Link>}{!token && <p> | </p>}{!token && <Link className={styles.hyperlinks} href="/signup">Signup</Link>} {token && <Link className={styles.hyperlinks} href="/login" onClick={logout}>Logout</Link>}
+        <div className={styles.navbar}>
+          {token && <p className={styles.user}>Welcome <Link href='/profile'>{token.userName}</Link></p>}
+          <div className={styles.links}>
+            {token && <><Link className={styles.hyperlinks} href='/user/friends'>Friends</Link><p> | </p></>}{token && <><Link className={styles.hyperlinks} href='/user/groups'>Groups</Link><p> | </p></>}{token && <><Link className={styles.hyperlinks} href='/user/activity'>Activity</Link><p> | </p></>}{!token && <Link className={styles.hyperlinks} href="/">Homepage</Link>}{!token && <p> | </p>}{!token && <Link className={styles.hyperlinks} href="/login">Login</Link>}{!token && <p> | </p>}{!token && <Link className={styles.hyperlinks} href="/signup">Signup</Link>} {token && <Link className={styles.hyperlinks} href="/login" onClick={logout}>Logout</Link>}
+          </div>
         </div>
       </div>
       <br />

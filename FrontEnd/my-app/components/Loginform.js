@@ -15,7 +15,7 @@ export default function Loginform() {
         e.preventDefault();
         try {
             await authenticateUser(username, password);
-            router.push('/users');
+            router.push('/profile');
         } catch (err) {
             setWarning(err.message);
         }

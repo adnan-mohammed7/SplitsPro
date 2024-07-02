@@ -1,30 +1,29 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { Container, Form, Button } from 'react-bootstrap';
+import { Container, Form, Button, Alert } from 'react-bootstrap';
 import styles from '@/styles/Loginform.module.css'
 import Link from 'next/link';
+import { authenticateUser } from '@/lib/authenticate';
 
 export default function Loginform() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [warning, setWarning] = useState('');
     const router = useRouter();
 
-    const handleSubmit = (e) => {
+    async function handleSubmit (e) {
         e.preventDefault();
-
-        // Mock authentication (replace with actual authentication logic)
-        if (username === 'admin' && password === 'password') {
-            router.push('/dashboard'); // Redirect to dashboard after successful login
-        } else {
-            setError('Invalid username or password');
+        try {
+            await authenticateUser(username, password);
+            router.push('/users');
+        } catch (err) {
+            setWarning(err.message);
         }
     };
 
     return (<>
         <Container className={styles.main}>
             <h1 className={styles.header}>Login</h1>
-            {error && <p className="text-danger">{error}</p>}
             <Form onSubmit={handleSubmit}>
                 <Form.Group controlId="username">
                     <Form.Label>Username:</Form.Label>
@@ -55,6 +54,8 @@ export default function Loginform() {
                 </div>
             </Form>
         </Container>
+
+        {warning && (<><br /><Alert variant="danger">{warning}</Alert></>)}
 
         <h6 className={styles.signUpText}>Don't have an account? <Link href="/signup">Signup</Link></h6>
     </>

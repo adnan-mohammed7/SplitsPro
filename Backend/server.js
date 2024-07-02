@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const passportJWT = require('passport-jwt');
+const cors = require('cors')
 
 // JSON Web Token Setup
 let ExtractJwt = passportJWT.ExtractJwt;
@@ -37,6 +38,7 @@ app.use(passport.initialize());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"))
 app.use(express.json());
+app.use(cors());
 
 const mongoose = require('mongoose');
 const CONNECTION_STRING

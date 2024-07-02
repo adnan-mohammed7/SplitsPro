@@ -84,7 +84,7 @@ app.get('/api/users/:userName', async (req, res) => {
     }
 })
 
-app.post('/api/users/register', async (req, res) => {
+app.post('/api/user/register', async (req, res) => {
     const newUsername = req.body.userName
     const inputPassword = req.body.password
     const confirmPassword = req.body.confirmPassword
@@ -120,7 +120,7 @@ app.post('/api/users/register', async (req, res) => {
     }
 })
 
-app.post('/api/users/login', async (req, res) => {
+app.post('/api/user/login', async (req, res) => {
     const username = req.body.userName
     const password = req.body.password
     console.log(`username: ${username}, password: ${password}`)
@@ -150,7 +150,7 @@ app.post('/api/users/login', async (req, res) => {
     }
 })
 
-app.put('/api/users/update', async (req, res) => {
+app.put('/api/user/update', async (req, res) => {
     const username = req.body.userName
     const newPassword = req.body.password
 
@@ -185,7 +185,7 @@ app.put('/api/users/update', async (req, res) => {
     }
 })
 
-app.delete('/api/users/delete', async (req, res) => {
+app.delete('/api/user/delete', async (req, res) => {
     const username = req.body.userName
     console.log(username)
 

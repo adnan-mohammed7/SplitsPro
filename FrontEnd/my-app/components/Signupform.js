@@ -4,29 +4,46 @@ import { Container, Form, Button } from 'react-bootstrap';
 import styles from '@/styles/Loginform.module.css'
 import Link from 'next/link';
 
-export default function Signupform(){
+export default function Signupform() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [passwordCheck, setPasswordCheck] = useState('');
     const [error, setError] = useState('');
+    const [result, setResult] = useState('');
     const router = useRouter();
+
+    const registerUser = async (name, passwordOne, passwordTwo) => {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
+            method: 'POST',
+            body: JSON.stringify({ userName: name, password: passwordOne, confirmPassword: passwordTwo }),
+            headers: {
+                'content-type': 'application/json',
+            },
+        });
+
+        const data = await res.json();
+
+        if (res.status === 201) {
+            setResult(`User Registered Successfully!`)
+        } else {
+            setError(data.message)
+        }
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        // Mock authentication (replace with actual authentication logic)
-        if (password === passwordCheck) {
-            router.push('/login'); // Redirect to dashboard after successful login
-        } else {
-            setError('Invalid username or password');
-        }
+        registerUser(username, password, passwordCheck)
     };
+
+    const reset = () =>{
+        setError('')
+        setResult('')
+    }
 
     return (<>
         <Container className={styles.main}>
             <h1 className={styles.header}>Signup</h1>
-            {error && <p className="text-danger">{error}</p>}
-            <Form onSubmit={handleSubmit}>
+            <Form onSubmit={handleSubmit} onClick={()=>reset()}>
                 <Form.Group controlId="username">
                     <Form.Label>Username:</Form.Label>
                     <Form.Control
@@ -54,7 +71,7 @@ export default function Signupform(){
                     <Form.Control
                         type="password"
                         placeholder="Re-enter new password"
-                        value={password}
+                        value={passwordCheck}
                         onChange={(e) => setPasswordCheck(e.target.value)}
                         required
                     />
@@ -66,10 +83,11 @@ export default function Signupform(){
                     </Button>
                 </div>
             </Form>
+            {error && <p className="text-danger">{error}</p>}
+            {result && <p className='text-success'>{result}</p>}
         </Container>
 
         <h6 className={styles.signUpText}>Already have an Account? <Link href="/login">Login</Link></h6>
     </>
-
     );
 };

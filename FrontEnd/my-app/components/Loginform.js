@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { authenticateUser } from '@/lib/authenticate';
 
 export default function Loginform() {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [warning, setWarning] = useState('');
     const router = useRouter();
@@ -14,7 +14,7 @@ export default function Loginform() {
     async function handleSubmit (e) {
         e.preventDefault();
         try {
-            await authenticateUser(username, password);
+            await authenticateUser(email, password);
             router.push('/profile');
         } catch (err) {
             setWarning(err.message);
@@ -25,13 +25,13 @@ export default function Loginform() {
         <Container className={styles.main}>
             <h1 className={styles.header}>Login</h1>
             <Form onSubmit={handleSubmit}>
-                <Form.Group controlId="username">
+                <Form.Group controlId="email">
                     <Form.Label>Username:</Form.Label>
                     <Form.Control
                         type="text"
-                        placeholder="Enter username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="Enter email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                     />
                 </Form.Group>

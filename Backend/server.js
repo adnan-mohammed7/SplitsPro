@@ -52,60 +52,101 @@ db.once("open", () => {
 
 const Schema = mongoose.Schema;
 const userSchema = new Schema({
-    userName: String,
-    password: String,
+    id: {
+        type: Number,
+        unique: true,
+    },
+    firstName:{
+        type: String,
+        require: true,
+    },
+    lastName:{
+        type: String,
+        require: true,
+    },
+    fullName:{
+        type: String,
+        require: true,
+    },
+    email: {
+        type: String,
+        unique: true,
+        require: true,
+    },
+    password: {
+        type: String,
+        require: true,
+    },
+    photo: String,
+    friends: [],
+    groups: [],
+    individualExpenses: [],
+    groupExpenses: [],
 });
+
+const userCountSchema = new Schema({
+    userCount: Number,
+    groupCount: Number,
+    expenseCount: Number,
+})
 // model - if the collection does not exist in your databse,mongoose will create it.
 const Users = mongoose.model("users", userSchema);
+const UsersCount = mongoose.model("usercounts", userCountSchema);
 
 app.get('/api/users',passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
-        const users = await Users.find({}, 'userName').lean().exec();
+        const users = await Users.find({}, 'fullName email').lean().exec();
         res.status(200).send(users)
     } catch (err) {
         res.status(500).send({message: err})
     }
 })
 
-app.get('/api/users/:userName', async (req, res) => {
-    const username = req.params.userName
-    console.log("User Id: ", username)
+app.get('/api/users/:email',passport.authenticate('jwt', { session: false }), async (req, res) => {
+    const inputEmail = req.params.email
     try {
-        const result = await Users.findOne({ userName: new RegExp(`^${username}$`, 'i') })
-        console.log(result)
+        const result = await Users.findOne({ email: new RegExp(`^${inputEmail}$`, 'i') })
         if (result) {
             res.status(200).send(result)
         } else {
             res.status(404).send({message: `User Not Found!`})
         }
     } catch (err) {
-        console.log({message: `Error Finding User: ${username}`})
         res.status(500).send({message: `Error: ${err}`})
     }
 })
 
 app.post('/api/user/register', async (req, res) => {
-    const newUsername = req.body.userName
+    const newId = await UsersCount.findOne({})
+    const inputFirstName = req.body.firstName
+    const inputLastName = req.body.lastName
+    const inputEmail = req.body.email
     const inputPassword = req.body.password
     const confirmPassword = req.body.confirmPassword
 
     if (inputPassword == confirmPassword) {
         bcrypt.hash(inputPassword, 10)
             .then(async (newPassword) => {
-                console.log(`username: ${newUsername}, password: ${newPassword}`)
-
                 try {
-                    const result = await Users.findOne({ userName: new RegExp(`^${newUsername}$`, 'i') })
+                    const result = await Users.findOne({ email: new RegExp(`^${inputEmail}$`, 'i') })
                     if (result) {
                         res.status(400).send({message: `User already exists!`})
                     } else {
                         const newUser = new Users({
-                            userName: newUsername,
-                            password: newPassword
+                            id: newId.userCount,
+                            firstName: inputFirstName,
+                            lastName: inputLastName,
+                            fullName: inputFirstName +" "+ inputLastName,
+                            email: inputEmail,
+                            password: newPassword,
+                            photo: "",
+                            friends: [],
+                            groups: [],
+                            individualExpenses: [],
+                            groupExpenses: [],
                         });
-                        console.log(newUser)
                         await newUser.save()
-                        console.log(`New User: ${newUser} Added!`)
+                        await UsersCount.updateOne({}, {$inc: {userCount: 1}})
                         res.status(201).send({message: `New User: ${newUser} Added!`})
                     }
                 } catch (err) {
@@ -121,42 +162,41 @@ app.post('/api/user/register', async (req, res) => {
 })
 
 app.post('/api/user/login', async (req, res) => {
-    const username = req.body.userName
+    const inputEmail = req.body.email
     const password = req.body.password
-    console.log(`username: ${username}, password: ${password}`)
 
     try {
-        const result = await Users.findOne({ userName: new RegExp(`^${username}$`, 'i') })
+        const result = await Users.findOne({ email: new RegExp(`^${inputEmail}$`, 'i') })
         if (result) {
             bcrypt.compare(password, result.password).then((hash) => {
                 if (hash == true) {
                     let payload = {
                         _id: result._id,
-                        userName: result.userName,
-                        //password: result.password,
+                        email: result.email,
+                        fullName: result.fullName,
+                        id: result.id,
                     };
 
                     let token = jwt.sign(payload, jwtOptions.secretOrKey);
                     res.status(200).send({message: `Login successful`, token: token})
                 } else {
-                    res.status(500).send({message: `Incorrect password for User: ${username}`})
+                    res.status(500).send({message: `Incorrect password for User: ${inputEmail}`})
                 }
             })
         } else {
-            res.status(404).send({message: `User: ${username} not found!`})
+            res.status(404).send({message: `User: ${inputEmail} not found!`})
         }
     } catch (err) {
         res.status(404).send({message: `Error: ${err}`})
     }
 })
 
-app.put('/api/user/update', async (req, res) => {
-    const username = req.body.userName
+app.put('/api/user/update', passport.authenticate('jwt', { session: false }),async (req, res) => {
+    const inputEmail = req.body.email
     const newPassword = req.body.password
 
     try {
-        const result = await Users.findOne({ userName: new RegExp(`^${username}$`, 'i') })
-        console.log(result)
+        const result = await Users.findOne({ email: new RegExp(`^${inputEmail}$`, 'i') })
         if (result) {
             bcrypt.compare(newPassword, result.password).then(async (result) => {
                 if (result == true) {
@@ -164,14 +204,14 @@ app.put('/api/user/update', async (req, res) => {
                 } else {
                     bcrypt.hash(newPassword, 10).then(async (hash) => {
                         try {
-                            const result = await Users.updateOne({ userName: new RegExp(`^${username}$`, 'i') }, { $set: { password: hash } })
+                            const result = await Users.updateOne({ email: new RegExp(`^${inputEmail}$`, 'i') }, { $set: { password: hash } })
                             if (result.modifiedCount > 0) {
-                                res.status(200).send({message: `User: ${username}'s password is updated!`})
+                                res.status(200).send({message: `User: ${inputEmail}'s password is updated!`})
                             } else {
-                                res.status(404).send({message: `User: ${username} not found!`})
+                                res.status(404).send({message: `User: ${inputEmail} not found!`})
                             }
                         } catch (err) {
-                            res.status(500).send({message: `Error updating user: ${username}, Error: ${err}`})
+                            res.status(500).send({message: `Error updating user: ${inputEmail}, Error: ${err}`})
                         }
                     }).catch((err) => {
                         res.status(500).send({message: err})
@@ -180,22 +220,20 @@ app.put('/api/user/update', async (req, res) => {
             });
         }
     } catch (err) {
-        console.log(`Error Finding User: ${username}`)
-        res.status(500).send({message: `Error finding user: ${username}, Error: ${err}`})
+        res.status(500).send({message: `Error finding user: ${inputEmail}, Error: ${err}`})
     }
 })
 
 app.delete('/api/user/delete', async (req, res) => {
-    const username = req.body.userName
-    console.log(username)
+    const inputEmail = req.body.email
 
     try {
-        const result = await Users.deleteOne({ userName: new RegExp(`^${username}$`, 'i') })
+        const result = await Users.deleteOne({ email: new RegExp(`^${inputEmail}$`, 'i') })
         if (result.deletedCount > 0) {
-            res.status(200).send({message: `User: ${username} was deleted successfully!`})
+            res.status(200).send({message: `User: ${inputEmail} was deleted successfully!`})
         }
         else {
-            res.status(404).send({message: `User ${username} was not found!`})
+            res.status(404).send({message: `User ${inputEmail} was not found!`})
         }
     } catch (err) {
         res.status(500).send({message: `Error: ${err}`})
@@ -207,20 +245,3 @@ const onServerStart = () => {
     console.log(`http://localhost:${HTTP_PORT}`);
 };
 app.listen(HTTP_PORT, onServerStart);
-
-/*app.get('/api/users/password/:userName', async (req, res) => {
-    username = req.params.userName
-    console.log("User Id: ", username)
-    try {
-        const result = await Users.findOne({ userName: new RegExp(`^${username}$`, 'i') })
-        console.log(result)
-        if (result) {
-            res.status(200).send(result.password)
-        } else {
-            res.status(404).send(`User Not Found!`)
-        }
-    } catch (err) {
-        console.log(`Error Finding User: ${username}`)
-        res.status(500).send(`Error: ${err}`)
-    }
-})*/

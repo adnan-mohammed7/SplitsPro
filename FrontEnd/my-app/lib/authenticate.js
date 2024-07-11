@@ -1,9 +1,9 @@
 import { jwtDecode } from 'jwt-decode';
 
-export async function authenticateUser(user, password) {
+export async function authenticateUser(mail, password) {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
       method: 'POST',
-      body: JSON.stringify({ userName: user, password: password }),
+      body: JSON.stringify({ email: mail, password: password }),
       headers: {
         'content-type': 'application/json',
       },

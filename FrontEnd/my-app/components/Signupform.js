@@ -4,16 +4,18 @@ import styles from '@/styles/Loginform.module.css'
 import Link from 'next/link';
 
 export default function Signupform() {
-    const [username, setUsername] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [passwordCheck, setPasswordCheck] = useState('');
     const [error, setError] = useState('');
     const [result, setResult] = useState('');
 
-    const registerUser = async (name, passwordOne, passwordTwo) => {
+    const registerUser = async (first, last, mail, passwordOne, passwordTwo) => {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
             method: 'POST',
-            body: JSON.stringify({ userName: name, password: passwordOne, confirmPassword: passwordTwo }),
+            body: JSON.stringify({ firstName: first, lastName: last, email: mail, password: passwordOne, confirmPassword: passwordTwo }),
             headers: {
                 'content-type': 'application/json',
             },
@@ -30,7 +32,7 @@ export default function Signupform() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        registerUser(username, password, passwordCheck)
+        registerUser(firstName, lastName, email, password, passwordCheck)
     };
 
     const reset = () => {
@@ -42,13 +44,34 @@ export default function Signupform() {
         <Container className={styles.main}>
             <h1 className={styles.header}>Signup</h1>
             <Form onSubmit={handleSubmit} onClick={() => reset()}>
+            <Form.Group controlId="firstName">
+                    <Form.Label>First Name:</Form.Label>
+                    <Form.Control
+                        type="text"
+                        placeholder="Enter your First Name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                    />
+                </Form.Group>
+                <Form.Group controlId="lastName">
+                    <Form.Label>Last Name:</Form.Label>
+                    <Form.Control
+                        type="text"
+                        placeholder="Enter your Last Name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                    />
+                </Form.Group>
+
                 <Form.Group controlId="username">
-                    <Form.Label>Username:</Form.Label>
+                    <Form.Label>Email:</Form.Label>
                     <Form.Control
                         type="text"
                         placeholder="Enter new username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                     />
                 </Form.Group>
@@ -79,7 +102,7 @@ export default function Signupform() {
                     {error && <p className={`text-danger ${styles.warning}`}>{error}</p>}
                     {result && <p className={`text-success ${styles.warning}`}>{result}</p>}
                     <Button className={styles.btn} variant="primary" type="submit">
-                        Login
+                        Signup
                     </Button>
                 </div>
             </Form>

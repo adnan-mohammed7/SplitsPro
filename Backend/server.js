@@ -56,15 +56,15 @@ const userSchema = new Schema({
         type: Number,
         unique: true,
     },
-    firstName:{
+    firstName: {
         type: String,
         require: true,
     },
-    lastName:{
+    lastName: {
         type: String,
         require: true,
     },
-    fullName:{
+    fullName: {
         type: String,
         require: true,
     },
@@ -93,26 +93,26 @@ const userCountSchema = new Schema({
 const Users = mongoose.model("users", userSchema);
 const UsersCount = mongoose.model("usercounts", userCountSchema);
 
-app.get('/api/users',passport.authenticate('jwt', { session: false }), async (req, res) => {
+app.get('/api/users', passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
         const users = await Users.find({}, 'fullName email').lean().exec();
         res.status(200).send(users)
     } catch (err) {
-        res.status(500).send({message: err})
+        res.status(500).send({ message: err })
     }
 })
 
-app.get('/api/users/:email',passport.authenticate('jwt', { session: false }), async (req, res) => {
+app.get('/api/users/:email', passport.authenticate('jwt', { session: false }), async (req, res) => {
     const inputEmail = req.params.email
     try {
         const result = await Users.findOne({ email: new RegExp(`^${inputEmail}$`, 'i') })
         if (result) {
             res.status(200).send(result)
         } else {
-            res.status(404).send({message: `User Not Found!`})
+            res.status(404).send({ message: `User Not Found!` })
         }
     } catch (err) {
-        res.status(500).send({message: `Error: ${err}`})
+        res.status(500).send({ message: `Error: ${err}` })
     }
 })
 
@@ -130,13 +130,13 @@ app.post('/api/user/register', async (req, res) => {
                 try {
                     const result = await Users.findOne({ email: new RegExp(`^${inputEmail}$`, 'i') })
                     if (result) {
-                        res.status(400).send({message: `User already exists!`})
+                        res.status(400).send({ message: `User already exists!` })
                     } else {
                         const newUser = new Users({
                             id: newId.userCount,
                             firstName: inputFirstName,
                             lastName: inputLastName,
-                            fullName: inputFirstName +" "+ inputLastName,
+                            fullName: inputFirstName + " " + inputLastName,
                             email: inputEmail,
                             password: newPassword,
                             photo: "",
@@ -145,19 +145,21 @@ app.post('/api/user/register', async (req, res) => {
                             individualExpenses: [],
                             groupExpenses: [],
                         });
+
+                        console.log(newUser)
                         await newUser.save()
-                        await UsersCount.updateOne({}, {$inc: {userCount: 1}})
-                        res.status(201).send({message: `New User: ${newUser} Added!`})
+                        await UsersCount.updateOne({}, { $inc: { userCount: 1 } })
+                        res.status(201).send({ message: `New User: ${newUser} Added!` })
                     }
                 } catch (err) {
-                    res.status(500).send({message: `Error: ${err}`})
+                    res.status(500).send({ message: `Error: ${err}` })
                 }
             })
             .catch((err) => {
-                res.status(500).send({message: err})
+                res.status(500).send({ message: err })
             });
     } else {
-        res.status(500).send({message: `Password does not match`})
+        res.status(500).send({ message: `Password does not match` })
     }
 })
 
@@ -178,20 +180,20 @@ app.post('/api/user/login', async (req, res) => {
                     };
 
                     let token = jwt.sign(payload, jwtOptions.secretOrKey);
-                    res.status(200).send({message: `Login successful`, token: token})
+                    res.status(200).send({ message: `Login successful`, token: token })
                 } else {
-                    res.status(500).send({message: `Incorrect password for User: ${inputEmail}`})
+                    res.status(500).send({ message: `Incorrect password for User: ${inputEmail}` })
                 }
             })
         } else {
-            res.status(404).send({message: `User: ${inputEmail} not found!`})
+            res.status(404).send({ message: `User: ${inputEmail} not found!` })
         }
     } catch (err) {
-        res.status(404).send({message: `Error: ${err}`})
+        res.status(404).send({ message: `Error: ${err}` })
     }
 })
 
-app.put('/api/user/update', passport.authenticate('jwt', { session: false }),async (req, res) => {
+app.put('/api/user/update', passport.authenticate('jwt', { session: false }), async (req, res) => {
     const inputEmail = req.body.email
     const newPassword = req.body.password
 
@@ -200,27 +202,105 @@ app.put('/api/user/update', passport.authenticate('jwt', { session: false }),asy
         if (result) {
             bcrypt.compare(newPassword, result.password).then(async (result) => {
                 if (result == true) {
-                    res.status(500).send({message: `New password must be different from the current password`})
+                    res.status(500).send({ message: `New password must be different from the current password` })
                 } else {
                     bcrypt.hash(newPassword, 10).then(async (hash) => {
                         try {
                             const result = await Users.updateOne({ email: new RegExp(`^${inputEmail}$`, 'i') }, { $set: { password: hash } })
                             if (result.modifiedCount > 0) {
-                                res.status(200).send({message: `User: ${inputEmail}'s password is updated!`})
+                                res.status(200).send({ message: `User: ${inputEmail}'s password is updated!` })
                             } else {
-                                res.status(404).send({message: `User: ${inputEmail} not found!`})
+                                res.status(404).send({ message: `User: ${inputEmail} not found!` })
                             }
                         } catch (err) {
-                            res.status(500).send({message: `Error updating user: ${inputEmail}, Error: ${err}`})
+                            res.status(500).send({ message: `Error updating user: ${inputEmail}, Error: ${err}` })
                         }
                     }).catch((err) => {
-                        res.status(500).send({message: err})
+                        res.status(500).send({ message: err })
                     });
                 }
             });
         }
     } catch (err) {
-        res.status(500).send({message: `Error finding user: ${inputEmail}, Error: ${err}`})
+        res.status(500).send({ message: `Error finding user: ${inputEmail}, Error: ${err}` })
+    }
+})
+
+app.put('/api/user/check', (req, res) => {
+    res.status(200).send("Success")
+})
+
+app.put('/api/user/addfriend', async (req, res) => {
+    const userEmail = req.body.email
+    const friendEmail = req.body.friend
+
+    try {
+        const user = await Users.findOne({ email: new RegExp(`^${userEmail}$`, 'i') })
+        const friend = await Users.findOne({ email: new RegExp(`^${friendEmail}$`, 'i') })
+        if (user && friend) {
+            let userList = user.friends
+            let friendList = friend.friends
+            if (!(userList.includes(friendEmail) && friendList.includes(userEmail))) {
+                userList.push(friendEmail)
+                friendList.push(userEmail)
+                try {
+                    const result = await Users.updateOne({ email: new RegExp(`^${userEmail}$`, 'i') }, { $set: { friends: userList } })
+                    const friendResult = await Users.updateOne({ email: new RegExp(`^${friendEmail}$`, 'i') }, { $set: { friends: friendList } })
+                    if (result.modifiedCount > 0 && friendResult.modifiedCount > 0) {
+                        res.status(200).send({ message: `User: ${userEmail} & ${friendEmail}'s are updated!` })
+                    } else {
+                        res.status(404).send({ message: `User: ${userEmail} & ${friendEmail} not found!` })
+                    }
+                } catch (err) {
+                    res.status(500).send({ message: `Error updating user: ${userEmail}, Error: ${err}` })
+                }
+            } else {
+                res.status(500).send({ message: `Users are already friends` })
+            }
+        }
+        else if (!friend && user) {
+            res.status(500).send({ message: `Error finding user: ${friendEmail}` })
+        }
+        else if (!user && friend) {
+            res.status(500).send({ message: `Error finding user: ${userEmail}` })
+        }
+    } catch (err) {
+        res.status(500).send({ message: `Error finding users: ${userEmail} & ${friendEmail}, Error: ${err}` })
+    }
+})
+
+app.put('/api/user/removefriend', async (req, res) => {
+    const userEmail = req.body.email
+    const friendEmail = req.body.friend
+
+    try {
+        const user = await Users.findOne({ email: new RegExp(`^${userEmail}$`, 'i') })
+        const friend = await Users.findOne({ email: new RegExp(`^${friendEmail}$`, 'i') })
+        if (user && friend) {
+            let userList = user.friends
+            let friendList = friend.friends
+            if (userList.includes(friendEmail) && friendList.includes(userEmail)) {
+                userList.splice(userList.indexOf(friendEmail), 1)
+                friendList.splice(friendList.indexOf(userEmail), 1)
+                try {
+                    const result = await Users.updateOne({ email: new RegExp(`^${userEmail}$`, 'i') }, { $set: { friends: userList } })
+                    const friendResult = await Users.updateOne({ email: new RegExp(`^${friendEmail}$`, 'i') }, { $set: { friends: friendList } })
+                    if (result.modifiedCount > 0 && friendResult.modifiedCount > 0) {
+                        res.status(200).send({ message: `User: ${userEmail} & ${friendEmail}'s are updated!` })
+                    } else {
+                        res.status(404).send({ message: `User: ${userEmail} & ${friendEmail} not found!` })
+                    }
+                } catch (err) {
+                    res.status(500).send({ message: `Error updating user: ${userEmail}, Error: ${err}` })
+                }
+            } else {
+                res.status(500).send({ message: `Users are not friends` })
+            }
+        } else {
+            res.status(500).send({ message: `Error finding users: ${userEmail} & ${friendEmail}` })
+        }
+    } catch (err) {
+        res.status(500).send({ message: `Error finding users: ${userEmail} & ${friendEmail}, Error: ${err}` })
     }
 })
 
@@ -230,15 +310,17 @@ app.delete('/api/user/delete', async (req, res) => {
     try {
         const result = await Users.deleteOne({ email: new RegExp(`^${inputEmail}$`, 'i') })
         if (result.deletedCount > 0) {
-            res.status(200).send({message: `User: ${inputEmail} was deleted successfully!`})
+            res.status(200).send({ message: `User: ${inputEmail} was deleted successfully!` })
         }
         else {
-            res.status(404).send({message: `User ${inputEmail} was not found!`})
+            res.status(404).send({ message: `User ${inputEmail} was not found!` })
         }
     } catch (err) {
-        res.status(500).send({message: `Error: ${err}`})
+        res.status(500).send({ message: `Error: ${err}` })
     }
 })
+
+app.post('/api/friends')
 
 const onServerStart = () => {
     console.log("Express http server listening on: " + HTTP_PORT);
